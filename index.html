@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a1c33" />
+    <meta name="description" content="Peace Treaties 1919-1923: an interactive 3D map quiz on Versailles, Saint-Germain, Neuilly, Trianon, Sèvres and Lausanne." />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>Peace Treaties 3D · 1919–1923</title>
+  </head>
+  <body class="bg-[#0a1c33] text-slate-100 antialiased overflow-hidden select-none">
+    <div id="app" class="fixed inset-0">
+      <!-- 3D stage -->
+      <div id="stage" class="absolute inset-0">
+        <canvas id="map" class="block w-full h-full touch-none outline-none"></canvas>
+        <div id="labels" class="pointer-events-none absolute inset-0 overflow-hidden"></div>
+        <div id="floaters" class="pointer-events-none absolute inset-0 overflow-hidden"></div>
+      </div>
+
+      <!-- HUD header -->
+      <header class="absolute top-0 inset-x-0 p-2 sm:p-3 pt-[max(0.5rem,env(safe-area-inset-top))] pointer-events-none">
+        <div class="pointer-events-auto mx-auto max-w-6xl panel px-3 py-2 flex flex-col gap-2">
+          <div class="flex items-center gap-2 sm:gap-4">
+            <button id="treatyBtn" class="min-w-0 flex-1 text-left group" aria-label="Choose treaty">
+              <div class="flex items-center gap-2">
+                <span id="treatyDot" class="inline-block w-2.5 h-2.5 rounded-full shrink-0"></span>
+                <span id="treatyTitle" class="font-semibold text-sm sm:text-lg truncate group-hover:text-amber-300">Treaty of Versailles</span>
+                <span class="text-slate-400 text-xs shrink-0">▾</span>
+              </div>
+              <div id="treatyDate" class="text-[11px] sm:text-xs text-slate-400 truncate"></div>
+            </button>
+            <div class="text-right shrink-0">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400">Score</div>
+              <div id="score" class="font-bold text-lg sm:text-2xl leading-none text-amber-300 tabular-nums">0</div>
+            </div>
+            <button id="briefBtn" class="btn" title="Treaty briefing &amp; key terms" aria-label="Treaty briefing">📜</button>
+            <button id="soundBtn" class="btn" title="Sound on/off" aria-label="Toggle sound">🔊</button>
+            <button id="helpBtn" class="btn" title="How to play" aria-label="Help">?</button>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1 h-2 rounded-full bg-white/10 overflow-hidden" role="progressbar" aria-label="Round progress">
+              <div id="progress" class="h-full rounded-full bg-amber-400 transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <span id="progressText" class="text-xs text-slate-300 tabular-nums shrink-0">0 / 0</span>
+          </div>
+          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <div class="seg shrink-0" role="group" aria-label="Theatre switcher">
+              <button data-theatre="all" class="seg-btn">All</button>
+              <button data-theatre="europe" class="seg-btn">Europe</button>
+              <button data-theatre="colonies" class="seg-btn">World Colonies</button>
+            </div>
+            <button id="compareBtn" class="btn-wide shrink-0" aria-pressed="false" aria-label="Lausanne Comparison mode">
+              <span>⚖️</span><span>Lausanne<span class="hidden sm:inline"> Comparison</span></span>
+            </button>
+            <label class="flex items-center gap-1.5 text-xs text-slate-300 shrink-0 cursor-pointer ml-auto">
+              <input id="guideToggle" type="checkbox" checked class="accent-amber-400" /> Guide camera
+            </label>
+          </div>
+        </div>
+      </header>
+
+      <!-- question prompt -->
+      <section id="prompt" class="absolute left-0 right-0 top-[8.9rem] sm:top-[9.4rem] px-2 sm:px-3 pointer-events-none">
+        <div class="mx-auto max-w-6xl">
+          <div class="pointer-events-auto panel inline-flex flex-col gap-1 px-4 py-2.5 max-w-full sm:max-w-md">
+            <div class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-slate-400">
+              <span id="qCount">Question 1</span>
+              <span id="qPts" class="ml-auto text-amber-300 normal-case tracking-normal"></span>
+            </div>
+            <div id="qText" class="text-base sm:text-xl font-semibold leading-snug">Find: …</div>
+            <div id="qClue" class="text-xs sm:text-sm text-sky-200 hidden"></div>
+            <div class="flex gap-2 mt-1">
+              <button id="hintBtn" class="btn-sm">💡 Hint (−20)</button>
+              <button id="skipBtn" class="btn-sm">Skip</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- region shortcuts -->
+      <nav class="absolute bottom-0 inset-x-0 p-2 sm:p-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pointer-events-none">
+        <div class="mx-auto flex justify-center">
+          <div id="presets" class="pointer-events-auto panel px-2 py-1.5 flex gap-1 overflow-x-auto no-scrollbar max-w-full">
+            <button data-view="europe" class="preset">🇪🇺 Europe</button>
+            <button data-view="africa" class="preset">🌍 Africa</button>
+            <button data-view="middle_east" class="preset">🕌 Middle East</button>
+            <button data-view="asia_pacific" class="preset">🌏 Asia Pacific</button>
+            <button data-view="world" class="preset">🌐 World</button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- tooltip -->
+      <div id="tip" class="pointer-events-none fixed z-30 hidden px-2 py-1 rounded-md bg-slate-900/90 border border-white/20 text-xs"></div>
+      <div id="toast" class="pointer-events-none fixed z-40 left-1/2 -translate-x-1/2 top-[13.5rem] sm:top-[14rem] max-w-[90vw] px-4 py-2 rounded-full bg-slate-900/95 border border-white/20 text-sm opacity-0 transition-opacity duration-300 text-center"></div>
+
+      <!-- info drawer -->
+      <aside id="drawer" class="drawer" aria-hidden="true">
+        <div class="drawer-handle md:hidden"></div>
+        <div class="flex items-start gap-2 mb-2">
+          <div class="min-w-0 flex-1">
+            <div id="dTreaty" class="text-[11px] uppercase tracking-wider font-semibold"></div>
+            <h2 id="dTitle" class="text-xl font-bold leading-tight"></h2>
+          </div>
+          <button id="dClose" class="btn" aria-label="Close panel">✕</button>
+        </div>
+        <div id="dBody" class="space-y-3 text-sm overflow-y-auto pr-1 flex-1"></div>
+        <div class="pt-3 flex gap-2">
+          <button id="dNext" class="btn-primary flex-1">Next question →</button>
+        </div>
+      </aside>
+
+      <!-- Lausanne comparison panel -->
+      <section id="compare" class="compare hidden">
+        <div class="flex items-center gap-2 mb-2">
+          <h3 class="font-semibold text-sm sm:text-base">Sèvres 1920 ⇄ Lausanne 1923</h3>
+          <button id="cClose" class="btn ml-auto" aria-label="Close comparison">✕</button>
+        </div>
+        <div class="flex items-center gap-2 text-xs mb-1">
+          <span class="text-cyan-300 w-14">Sèvres</span>
+          <input id="cSlider" type="range" min="0" max="100" value="0" class="flex-1 accent-amber-400" aria-label="Compare Sèvres and Lausanne" />
+          <span class="text-blue-300 w-14 text-right">Lausanne</span>
+          <button id="cPlay" class="btn-sm">▶</button>
+        </div>
+        <div id="cLegend" class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-300 mb-2"></div>
+        <div id="cRows" class="space-y-1.5 overflow-y-auto"></div>
+      </section>
+
+      <!-- modal -->
+      <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-black/60 backdrop-blur-sm">
+        <div id="modalCard" class="panel w-full max-w-lg max-h-[88vh] overflow-y-auto p-5"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

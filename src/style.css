@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+
+@layer base {
+  html, body { height: 100%; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+}
+
+@layer components {
+  .btn {
+    @apply shrink-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/25 text-base flex items-center justify-center transition;
+  }
+  .btn-wide {
+    @apply px-3 h-8 rounded-full bg-white/10 hover:bg-white/20 text-xs sm:text-sm flex items-center gap-1.5 transition border border-transparent;
+  }
+  .btn-wide[aria-pressed='true'] {
+    @apply bg-blue-500/30 border-blue-400 text-blue-100;
+  }
+  .btn-sm {
+    @apply px-3 h-7 rounded-full bg-white/10 hover:bg-white/20 text-xs transition;
+  }
+  .btn-primary {
+    @apply h-11 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-slate-900 font-semibold transition;
+  }
+  .seg {
+    @apply flex rounded-full bg-white/10 p-0.5;
+  }
+  .seg-btn {
+    @apply px-3 h-7 rounded-full text-xs sm:text-sm transition text-slate-300 whitespace-nowrap;
+  }
+  .seg-btn[aria-pressed='true'] {
+    @apply bg-amber-400 text-slate-900 font-semibold;
+  }
+  .preset {
+    @apply px-3 h-9 rounded-xl text-xs sm:text-sm whitespace-nowrap hover:bg-white/15 active:bg-white/25 transition;
+  }
+  .preset[aria-current='true'] {
+    @apply bg-white/20 font-semibold;
+  }
+
+  .drawer {
+    @apply fixed z-20 panel flex flex-col p-4 transition-[transform,visibility] duration-300 ease-out;
+    right: 0.5rem;
+    left: 0.5rem;
+    bottom: 4.2rem;
+    max-height: 58vh;
+    transform: translateY(calc(100% + 6rem));
+    visibility: hidden;
+  }
+  .drawer.open { transform: translateY(0); visibility: visible; }
+  .drawer-handle { @apply mx-auto mb-2 h-1 w-10 rounded-full bg-white/25; }
+  @media (min-width: 768px) {
+    .drawer {
+      left: auto;
+      top: 9.5rem;
+      bottom: 5rem;
+      width: 24rem;
+      max-height: none;
+      transform: translateX(120%);
+    }
+    .drawer.open { transform: translateX(0); visibility: visible; }
+  }
+
+  .compare {
+    @apply fixed z-20 panel p-3 flex flex-col;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 4.2rem;
+    max-height: 48vh;
+  }
+  @media (min-width: 768px) {
+    .compare { right: auto; width: 27rem; left: 0.75rem; top: 9.5rem; bottom: 5rem; max-height: none; }
+  }
+  .compare #cRows { @apply flex-1; }
+
+  .map-label {
+    @apply absolute left-0 top-0 px-1.5 py-0.5 rounded-md bg-slate-900/80 border text-[10px] sm:text-xs font-medium whitespace-nowrap;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .floater {
+    @apply absolute font-extrabold text-2xl sm:text-3xl text-amber-300;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    animation: floatUp 1.4s ease-out forwards;
+  }
+  .floater.bad { @apply text-red-400; }
+
+  .chip { @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold; }
+}
+
+@utility panel {
+  @apply bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl shadow-black/30;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@keyframes floatUp {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+  15% { opacity: 1; transform: translate(-50%, -12px) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -90px) scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.shake { animation: shake 0.4s; }
+@keyframes flashGood {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+.flash-good { animation: flashGood 0.5s ease-out; display: inline-block; }
